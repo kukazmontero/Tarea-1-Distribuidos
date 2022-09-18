@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "multiple-redis": "^2.0.0"
+  }
+}

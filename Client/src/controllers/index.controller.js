@@ -11,19 +11,41 @@ const options = {
     oneofs: true,
 };
 
+
+
+
 const redis_client = redis.createClient({
-    url:"redis://redis"
+   url:"redis://redis1"
 });
 
 redis_client.on('ready',()=>{
     console.log("Redis listo")
     console.log("-------------------------------------------------------------------------------------------------------------")
 })
+const redis_client2 = redis.createClient({
+    url:"redis://redis2"
+ });
+ 
+ redis_client2.on('ready',()=>{
+     console.log("Redis2 listo")
+     console.log("-------------------------------------------------------------------------------------------------------------")
+ })
+ const redis_client3 = redis.createClient({
+    url:"redis://redis3"
+ });
+ 
+ redis_client3.on('ready',()=>{
+     console.log("Redis3 listo")
+     console.log("-------------------------------------------------------------------------------------------------------------")
+ })
 
 redis_client.connect()
+redis_client2.connect()
+redis_client3.connect()
 
-console.log('Redis conection: '+redis_client.isOpen);
-
+console.log('Redis 1 conection: '+redis_client.isOpen);
+console.log('Redis 2 conection: '+redis_client2.isOpen);
+console.log('Redis 3 conection: '+redis_client3.isOpen);
 
 var packageDefinition = protoLoader.loadSync(PROTO_PATH, options);
 
@@ -35,57 +57,111 @@ const client = new InventorySearch(
   );
 
 const searchitems=(req,res)=>{
-    const busqueda=req.query.q
-    let cache = null;
+    const busqueda=req.query.q;
     (async () => {
+        resp = false;
         let reply = await redis_client.get(busqueda);
+        let reply2 = await redis_client2.get(busqueda);
+        let reply3 = await redis_client3.get(busqueda);
+
+        
+
+
             if(reply){
-                cache = JSON.parse(reply);
                 console.log("Busqueda: "+busqueda)
-                console.log("Encontrado en Caché!")
+                console.log("Encontrado en Caché 1!")
                 console.log("Resultados:")
-                var string_total=""
-                for (i in cache['product']){
-                var id=cache['product'][i].id
-                var title=cache['product'][i].title
-                var description=cache['product'].description
-                var keywords=cache['product'].keywords
-                var url=cache['product'].url
-                const stringsumar='id: '+id+' | title:' + title+' | description:'+description+' | keywords:'+keywords+' | url:'+url
-                string_total=string_total+stringsumar+'\n'
-                }
-                console.log(string_total)
+                console.log(reply)
                 console.log("--------------------------------------------------------------------------------------------------------------------------------")
+                resp = true
+            }
+            if(reply2){
+                console.log("Busqueda: "+busqueda)
+                console.log("Encontrado en Caché 2!")
+                console.log("Resultados:")
+                console.log(reply2)
+                console.log("--------------------------------------------------------------------------------------------------------------------------------")
+                resp = true
 
+            }
+            if(reply3){
+                console.log("Busqueda: "+busqueda)
+                console.log("Encontrado en Caché 3!")
+                console.log("Resultados:")
+                console.log(reply3)
+                console.log("--------------------------------------------------------------------------------------------------------------------------------")
+                resp = true
 
-                res.status(200).json(cache)
+            }
+            if(resp==true){
+                res.status(200).json(JSON.stringify(reply)+JSON.stringify(reply2)+JSON.stringify(reply3))
             }
             else{
                 console.log("Busqueda: "+busqueda)
                 console.log("No se ha encontrado en Caché, Buscando en Postgres...")
-                client.GetServerResponse({message:busqueda}, (error,URLs) =>{
+                client.GetServerResponse({message:busqueda}, (error,items) =>{
                     if(error){
-                        
                         res.status(400).json(error);
                     }
                     else{
-                        data = JSON.stringify(URLs)
-                        if (data['product']!==null){
-                        redis_client.set(busqueda,data)
-                        res.status(200).json(URLs);}
-                        
+                        data = JSON.stringify(items)
+                        let userObj = JSON.parse(data);
 
+
+                        if (userObj['product']!=null){
+                             aux1=[];
+                             aux2=[];
+                             aux3=[];
+                            for (i in userObj['product']){
+                                const x = parseInt(userObj['product'][i].id)
+
+                            if(x<=100){
+                                
+                                data=userObj['product'][i]
+                                aux=JSON.stringify(data)
+                                aux1.push(aux)
+                                //aux1 = aux1 + aux
+
+                            }
+                            else if(x<=400){
+                                
+                                data=userObj['product'][i]
+                                aux=JSON.stringify(data)
+                                aux2.push(aux)
+                                //aux2 = aux2 + aux
+
+                            }
+                            else if(x<=500){
+
+                                data=userObj['product'][i]
+                                aux=JSON.stringify(data)
+                                aux3.push(aux)
+                                //aux3 = aux3 + aux
+                            }
+                            }
+                            if(aux1){
+                                //console.log(aux1)
+                                redis_client.append(busqueda, JSON.stringify(aux1))
+                            }
+                            if(aux2){
+                                //console.log(aux2)
+                                redis_client2.append(busqueda, JSON.stringify(aux2))
+                            }
+                            if(aux3){
+                                //console.log(aux3)
+                                redis_client3.append(busqueda, JSON.stringify(aux3))
+                            }
+
+                            res.status(200).json(userObj['product']);
+
+                        }
                         
             
-                    }
+                    } 
                 });
             } 
     })();
 }
-
-
-
-
 
 module.exports={
  searchitems

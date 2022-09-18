@@ -6,7 +6,9 @@ services:
     build: ./Client
     depends_on:
       - grpc_server
-      - redis
+      - redis1
+      - redis2
+      - redis3
     ports:
       - "3000:3000"
 
@@ -30,19 +32,50 @@ services:
     ports:
       - "5432:5432"
 
-  redis:
-    container_name: cache
+  redis1:
     image: redis:6.2.6
     restart: always
     ports:
-      - "8031:6379"
+      - "8001:6379"
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     command:
       [
         "redis-server",
         "--bind",
-        "redis",
-        "--maxmemory 2mb",
+        "redis1",
+        "--maxmemory 1mb",
         "--maxmemory-policy allkeys-lru"
+      ]  
+
+  redis2:
+    image: redis:6.2.6
+    restart: always
+    ports:
+      - "8002:6379"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    command:
+      [
+        "redis-server",
+        "--bind",
+        "redis2",
+        "--maxmemory 1mb",
+        "--maxmemory-policy allkeys-lfu"
+      ]  
+
+  redis3:
+    image: redis:6.2.6
+    restart: always
+    ports:
+      - "8003:6379"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes        
+    command:
+      [
+        "redis-server",
+        "--bind",
+        "redis3",
+        "--maxmemory 1mb",
+        "--maxmemory-policy allkeys-random"
       ]
