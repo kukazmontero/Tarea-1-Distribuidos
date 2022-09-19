@@ -1,3 +1,4 @@
+
 CREATE TABLE URLs(Id INT, Title VARCHAR(300), Description VARCHAR(1000), Keywords VARCHAR(1000), URL VARCHAR(200));
 INSERT INTO URLs(Id, Title, Description, Keywords, URL) VALUES (1,'The Official Web Site for The State of New Jersey','Home of the Official website of the State of NJ ','StateofNewJersey,NewJersey,NJ,Government,State,Employment,AboutNJ,NJBusiness,Transportation','http://www.state.nj.us');
 INSERT INTO URLs(Id, Title, Description, Keywords, URL) VALUES (2,'The Official Web Site for The State of New Jersey','Home of the Official website of the State of NJ ','StateofNewJersey,NewJersey,NJ,Government,State,Employment,AboutNJ,NJBusiness,Transportation','http://www.state.nj.us');
